@@ -2,17 +2,33 @@ import cv2
 import numpy as np
 import os
 import xmltodict
-#import imghdr
+import sys
+import imghdr
 
-img = cv2.imread('Cardinal.jpg')
+n = len(sys.argv)
+files = ''
+if n > 1:
+    files = sys.argv[1]
+    if os.path.exists(files):
+        if not imghdr.what(files):
+            print(files, 'is not image file')
+            quit()
+    else:
+        print(files, 'doesn\'t exists')
+        quit()
+else:
+    print('No Arguments!')
+    quit()
+
+img = cv2.imread(files)
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 newImg = gray.copy()
 layers = 8
-wdth = int(256 / layers)
+width = int(256 / layers)
 
 for i in range(gray.shape[0]):
     for j in range(gray.shape[1]):
-        newImg[i][j] = np.uint8(int(gray[i][j] / wdth) * wdth)
+        newImg[i][j] = np.uint8(int(gray[i][j] / width) * width)
 
 for k in range(layers):
     gray_tmp = newImg.copy()
