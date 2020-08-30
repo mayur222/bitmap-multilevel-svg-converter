@@ -1,1 +1,3 @@
-# bitmap-multilevel-svg-converter
+# Bitmap to multilevel svg converter
+
+Coming soon ......
