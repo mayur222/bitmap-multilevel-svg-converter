@@ -20,6 +20,9 @@ else:
     print('No Arguments!')
     quit()
 
+dir_t='./tmp'
+if not os.path.isdir(dir_t):
+	os.mkdir(dir_t)
 img = cv2.imread(files)
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 newImg = gray.copy()
@@ -38,15 +41,15 @@ for k in range(layers):
                 gray_tmp[i][j] = 0
             else:
                 gray_tmp[i][j] = 255
-    cv2.imwrite('gray' + str(k) + '.bmp', gray_tmp)
+    cv2.imwrite(dir_t+'/gray' + str(k) + '.bmp', gray_tmp)
 
 for k in range(layers):
-    os.system('potrace -s gray' + str(k) + '.bmp')
+    os.system('cd '+dir_t+' && potrace -s gray' + str(k) + '.bmp && cd ..')
 
 main = None
 gs = list()
 for i in range(layers):
-    with open('gray' + str(i) + '.svg') as fd:
+    with open(dir_t+'/gray' + str(i) + '.svg') as fd:
         doc = xmltodict.parse(fd.read())
     if main is None:
         main = doc
@@ -62,3 +65,6 @@ main['svg']['g'] = gs
 
 with open('final.svg', 'w') as fd:
     fd.write(xmltodict.unparse(main))
+    
+if os.path.isdir(dir_t):
+	os.system('rm '+dir_t+' -r')
