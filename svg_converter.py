@@ -20,7 +20,7 @@ else:
     print('No Arguments!')
     quit()
 
-dir_t='./tmp'
+dir_t='./.tmp'
 if not os.path.isdir(dir_t):
 	os.mkdir(dir_t)
 img = cv2.imread(files)
@@ -29,18 +29,15 @@ newImg = gray.copy()
 layers = 8
 width = int(256 / layers)
 
-for i in range(gray.shape[0]):
-    for j in range(gray.shape[1]):
-        newImg[i][j] = np.uint8(int(gray[i][j] / width) * width)
+newImg = gray /width
+newImg = newImg.astype('int')
+newImg = newImg * width
 
 for k in range(layers):
     gray_tmp = newImg.copy()
-    for i in range(gray_tmp.shape[0]):
-        for j in range(gray_tmp.shape[1]):
-            if gray_tmp[i][j] == int(k * 32):
-                gray_tmp[i][j] = 0
-            else:
-                gray_tmp[i][j] = 255
+    mask = gray_tmp == int(k * width)
+    gray_tmp[mask] = 0
+    gray_tmp[~mask] = 255
     cv2.imwrite(dir_t+'/gray' + str(k) + '.bmp', gray_tmp)
 
 for k in range(layers):
@@ -55,7 +52,7 @@ for i in range(layers):
         main = doc
     g = doc['svg']['g']
     if i != 0:
-        val = '#' + str(hex(32 * i).lstrip("0x").rstrip("L")) * 3
+        val = '#' + str(hex(width * i).lstrip("0x").rstrip("L")) * 3
     else:
         val = '#000000'
     # print(hex(32*i).lstrip("0x"))
@@ -65,6 +62,6 @@ main['svg']['g'] = gs
 
 with open('final.svg', 'w') as fd:
     fd.write(xmltodict.unparse(main))
-    
+
 if os.path.isdir(dir_t):
 	os.system('rm '+dir_t+' -r')
