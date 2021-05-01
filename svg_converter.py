@@ -1,67 +1,68 @@
-import cv2
-import numpy as np
 import os
-import xmltodict
 import sys
 import imghdr
+import cv2
+import xmltodict
 
-n = len(sys.argv)
-files = ''
-if n > 1:
-    files = sys.argv[1]
-    if os.path.exists(files):
-        if not imghdr.what(files):
-            print(files, 'is not image file')
-            quit()
+N = len(sys.argv)
+FILE = ''
+if N > 1:
+    FILE = sys.argv[1]
+    if os.path.exists(FILE):
+        if not imghdr.what(FILE):
+            print(FILE, 'is not image file')
+            sys.exit()
     else:
-        print(files, 'doesn\'t exists')
-        quit()
+        print(FILE, 'doesn\'t exists')
+        sys.exit()
 else:
     print('No Arguments!')
-    quit()
+    sys.exit()
 
-dir_t='./.tmp'
-if not os.path.isdir(dir_t):
-	os.mkdir(dir_t)
-img = cv2.imread(files)
+OUT_FILE = '.'.join(FILE.split('.')[:-1])+'.svg'
+
+TMP_DIR='./.tmp'
+if not os.path.isdir(TMP_DIR):
+	os.mkdir(TMP_DIR)
+img = cv2.imread(FILE)
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 newImg = gray.copy()
-layers = 8
-width = int(256 / layers)
+LAYERS = 8
+WIDTH = int(256 / LAYERS)
 
-newImg = gray /width
+newImg = gray /WIDTH
 newImg = newImg.astype('int')
-newImg = newImg * width
+newImg = newImg * WIDTH
 
-for k in range(layers):
+for k in range(LAYERS):
     gray_tmp = newImg.copy()
-    mask = gray_tmp == int(k * width)
+    mask = gray_tmp == int(k * WIDTH)
     gray_tmp[mask] = 0
     gray_tmp[~mask] = 255
-    cv2.imwrite(dir_t+'/gray' + str(k) + '.bmp', gray_tmp)
+    cv2.imwrite(TMP_DIR+'/gray' + str(k) + '.bmp', gray_tmp)
 
-for k in range(layers):
-    os.system('cd '+dir_t+' && potrace -s gray' + str(k) + '.bmp && cd ..')
+for k in range(LAYERS):
+    os.system('cd '+TMP_DIR+' && potrace -s gray' + str(k) + '.bmp && cd ..')
 
-main = None
+MAIN = None
 gs = list()
-for i in range(layers):
-    with open(dir_t+'/gray' + str(i) + '.svg') as fd:
+for i in range(LAYERS):
+    with open(TMP_DIR+'/gray' + str(i) + '.svg') as fd:
         doc = xmltodict.parse(fd.read())
-    if main is None:
-        main = doc
+    if MAIN is None:
+        MAIN = doc
     g = doc['svg']['g']
     if i != 0:
-        val = '#' + str(hex(width * i).lstrip("0x").rstrip("L")) * 3
+        VAL = '#' + str(hex(WIDTH * i).lstrip("0x").rstrip("L")) * 3
     else:
-        val = '#000000'
+        VAL = '#000000'
     # print(hex(32*i).lstrip("0x"))
-    g['@fill'] = val
+    g['@fill'] = VAL
     gs.append(g)
-main['svg']['g'] = gs
+MAIN['svg']['g'] = gs
 
-with open('final.svg', 'w') as fd:
-    fd.write(xmltodict.unparse(main))
+with open(OUT_FILE, 'w') as fd:
+    fd.write(xmltodict.unparse(MAIN))
 
-if os.path.isdir(dir_t):
-	os.system('rm '+dir_t+' -r')
+if os.path.isdir(TMP_DIR):
+	os.system('rm '+TMP_DIR+' -r')
